@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Health Care Center - Interactive Report</title>
     <!-- Chosen Palette: "Slate" with "Emerald" accents from Tailwind CSS. This provides a clean, modern, and professional feel suitable for a healthcare application. -->
-    <!-- Application Structure Plan: The application is redesigned as a Single-Page Application (SPA) with tab-based navigation. This structure was chosen to unify the fragmented, multi-page Flask application into a single, seamless user experience. It eliminates page reloads, making navigation between the core Symptom Checker and informational pages (About, Blog, etc.) instantaneous. The user flow is centered around a primary "Symptom Checker" tool, with secondary information easily accessible, which is a more intuitive structure for the app's primary purpose. For desktop view, the main "Symptom Checker" section is split into two columns: the left column now houses all user input elements and direct AI interaction tools (symptom selection, speech recognition, symptom clarifier, and general health questions), while the right column displays the prediction results and the personalized health tip generator. This arrangement aims to provide a clearer workflow and better visual balance. -->
+    <!-- Application Structure Plan: The application is redesigned as a Single-Page Application (SPA) with tab-based navigation. This structure was chosen to unify the fragmented, multi-page Flask application into a single, seamless user experience. It eliminates page reloads, making navigation between the core Symptom Checker and informational pages (About, Blog, etc.) instantaneously. The user flow is centered around a primary "Symptom Checker" tool, with secondary information easily accessible, which is a more intuitive structure for the app's primary purpose. For desktop view, the main "Symptom Checker" section is split into two columns: the left column now houses all user input elements and direct AI interaction tools (symptom selection, speech recognition, symptom clarifier, and general health questions), while the right column displays the prediction results and the personalized health tip generator. This arrangement aims to provide a clearer workflow and better visual balance. -->
     <!-- Visualization & Content Choices: 
         - Symptom Input: The original text field is replaced with an interactive, searchable multi-select dropdown. Goal: Simplify and guide user input. Method: Custom JavaScript and Tailwind CSS. Interaction: Users can type to search, click to add, and click badges to remove symptoms. Justification: This prevents typos and limits input to known symptoms, improving prediction accuracy and user experience.
         - Prediction Results: Instead of modals or separate sections, results are displayed dynamically within a dedicated results card on the main view. Goal: Present information clearly and immediately after prediction. Method: JavaScript DOM manipulation. Justification: This provides direct feedback without disorienting the user with pop-ups or scrolling. The prediction logic has been reverted to a simpler simulation.
@@ -49,6 +49,7 @@
         <header class="text-center mb-8">
             <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900">Health Care Center</h1>
             <p class="mt-2 text-lg text-slate-600">Your AI-Powered Health Companion</p>
+            <p class="mt-2 text-lg text-slate-400">Made By - Kushal Singh</p>
         </header>
 
         <!-- Navigation Tabs -->
@@ -143,13 +144,13 @@
                     </div>
 
                     <!-- Right Column: Results & Personalized Health Tip -->
-                    <div class="space-y-8">
+                    <div class="space-y-0.5">
                          <!-- Prediction Results -->
-                        <div id="results-container" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 hidden">
+                        <div id="results-container" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 hidden lg:max-h-96 lg:overflow-y-auto">
                              <h2 class="text-2xl font-bold mb-2 text-slate-900">Analysis Results</h2>
                              <div id="results-content"></div>
                         </div>
-                        <div id="results-placeholder" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 flex flex-col items-center justify-center text-center h-full">
+                        <div id="results-placeholder" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 flex flex-col items-center justify-center text-center h-full lg:max-h-96 lg:overflow-y-auto">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                              <h3 class="text-xl font-semibold text-slate-700">Results will appear here</h3>
                              <p class="text-slate-500 mt-1">Select your symptoms and click "Analyze" to see the results.</p>
@@ -208,7 +209,7 @@
             <!-- Developer View -->
             <section id="view-developer" class="content-section">
                  <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 max-w-4xl mx-auto prose prose-lg prose-slate">
-                    <h6>About Kushal Singh: Your AI & ML Engineer</h6>
+                    <h6>About Kushal Singh : Your AI & ML Engineer</h6>
                     <h5>Meet the Developer</h5>
                     <p>Hello, I'm Kushal Singh Rajpurohit, your AI and Machine Learning Engineer. I am passionate about harnessing the power of technology to make a positive impact on people's lives. Allow me to share a bit about my journey in the world of artificial intelligence and machine learning.</p>
                     <h5>My Expertise</h5>
@@ -238,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DATA STORE ---
     // All data from the backend is embedded here to simulate the Flask app in a single file.
-    const allSymptomsList = ['itching','skin_rash','nodal_skin_eruptions','continuous_sneezing','shivering','chills','joint_pain','stomach_pain','acidity','ulcers_on_tongue','muscle_wasting','vomiting','burning_micturition','spotting_ urination','fatigue','weight_gain','anxiety','cold_hands_and_feets','mood_swings','weight_loss','restlessness','lethargy','patches_in_throat','irregular_sugar_level','cough','high_fever','sunken_eyes','breathlessness','sweating','dehydration','indigestion','headache','yellowish_skin','dark_urine','nausea','loss_of_appetite','pain_behind_the_eyes','back_pain','constipation','abdominal_pain','diarrhoea','mild_fever','yellow_urine','yellowing_of_eyes','acute_liver_failure','fluid_overload','swelling_of_stomach','swelled_lymph_nodes','malaise','blurred_and_distorted_vision','phlegm','throat_irritation','redness_of_eyes','sinus_pressure','runny_nose','congestion','chest_pain','weakness_in_limbs','fast_heart_rate','pain_during_bowel_movements','pain_in_anal_region','bloody_stool','irritation_in_anus','neck_pain','dizziness','cramps','bruising','obesity','swollen_legs','swollen_blood_vessels','puffy_face_and_eyes','enlarged_thyroid','brittle_nails','swollen_extremeties','excessive_hunger','extra_marital_contacts','drying_and_tingling_lips','slurred_speech','knee_pain','hip_joint_pain','muscle_weakness','stiff_neck','swelling_joints','movement_stiffness','spinning_movements','loss_of_balance','unsteadiness','weakness_of_one_body_side','loss_of_smell','bladder_discomfort','foul_smell_of urine','continuous_feel_of_urine','passage_of_gases','internal_itching','toxic_look_(typhos)','depression','irritability','muscle_pain','altered_sensorium','red_spots_over_body','belly_pain','abnormal_menstruation','dischromic _patches','watering_from_eyes','increased_appetite','polyuria','family_history','mucoid_sputum','rusty_sputum','lack_of_concentration','visual_disturbances','receiving_blood_transfusion','receiving_unsterile_injections','coma','stomach_bleeding','distention_of_abdomen','history_of_alcohol_consumption','fluid_overload.1','blood_in_sputum','prominent_veins_on_calf','palpitations','painful_walking','pus_filled_pimples','blackheads','scurring','skin_peeling','silver_like_dusting','small_dents_in_nails','inflammatory_nails','blister','red_sore_around_nose','unknown'];
+    const allSymptomsList = ['itching','skin_rash','nodal_skin_eruptions','continuous_sneezing','shivering','chills','joint_pain','stomach_pain','acidity','ulcers_on_tongue','muscle_wasting','vomiting','burning_micturition','spotting_ urination','fatigue','weight_gain','anxiety','cold_hands_and_feets','mood_swings','weight_loss','restlessness','lethargy','patches_in_throat','irregular_sugar_level','cough','high_fever','sunken_eyes','breathlessness','sweating','dehydration','indigestion','headache','yellowish_skin','dark_urine','dark_urine','nausea','loss_of_appetite','pain_behind_the_eyes','back_pain','constipation','abdominal_pain','diarrhoea','mild_fever','yellow_urine','yellowing_of_eyes','acute_liver_failure','fluid_overload','swelling_of_stomach','swelled_lymph_nodes','malaise','blurred_and_distorted_vision','phlegm','throat_irritation','redness_of_eyes','sinus_pressure','runny_nose','congestion','chest_pain','weakness_in_limbs','fast_heart_rate','pain_during_bowel_movements','pain_in_anal_region','bloody_stool','irritation_in_anus','neck_pain','dizziness','cramps','bruising','obesity','swollen_legs','swollen_blood_vessels','puffy_face_and_eyes','enlarged_thyroid','brittle_nails','swollen_extremeties','excessive_hunger','extra_marital_contacts','drying_and_tingling_lips','slurred_speech','knee_pain','hip_joint_pain','muscle_weakness','stiff_neck','swelling_joints','movement_stiffness','spinning_movements','loss_of_balance','unsteadiness','weakness_of_one_body_side','loss_of_smell','bladder_discomfort','foul_smell_of urine','continuous_feel_of_urine','passage_of_gases','internal_itching','toxic_look_(typhos)','depression','irritability','muscle_pain','altered_sensorium','red_spots_over_body','belly_pain','abnormal_menstruation','dischromic _patches','watering_from_eyes','increased_appetite','polyuria','family_history','mucoid_sputum','rusty_sputum','lack_of_concentration','visual_disturbances','receiving_blood_transfusion','receiving_unsterile_injections','coma','stomach_bleeding','distention_of_abdomen','history_of_alcohol_consumption','fluid_overload.1','blood_in_sputum','prominent_veins_on_calf','palpitations','painful_walking','pus_filled_pimples','blackheads','scurring','skin_peeling','silver_like_dusting','small_dents_in_nails','inflammatory_nails','blister','red_sore_around_nose','yellow_crust_ooze','unknown'];
     
     const diseaseData = {
         'Fungal infection': {
@@ -300,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UI ELEMENT REFERENCES ---
     const navLinks = document.querySelectorAll('.nav-link');
     const contentSections = document.querySelectorAll('.content-section');
+    const spaNavLinks = document.querySelectorAll('.spa-nav-link'); // Select new SPA navigation links
     const searchInput = document.getElementById('symptoms-search-input');
     const dropdown = document.getElementById('symptoms-dropdown');
     const selectedDisplay = document.getElementById('selected-symptoms-display');
@@ -313,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastPredictedDisease = null; // Global variable to store the last predicted disease
 
     // --- NAVIGATION LOGIC ---
+    // Existing tab navigation (for the main tabs within index.html itself)
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             // Update active link style
@@ -330,6 +333,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
+
+    // New: Handle clicks on SPA navigation links from nav.html
+    spaNavLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default link behavior (full page reload)
+
+            // Get the target view ID from data-target attribute
+            const targetViewId = e.target.dataset.target; // e.g., "view-about"
+            
+            // Deactivate all content sections
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Activate the target content section
+            const targetSection = document.getElementById(targetViewId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Update the active state of the main navigation tabs in index.html
+            // The IDs in nav.html are `data-target="view-home"`, `data-target="view-about"`
+            // The IDs in index.html's main nav are `id="nav-home"`, `id="nav-about"`
+            const correspondingNavLinkId = `nav-${targetViewId.replace('view-', '')}`;
+            navLinks.forEach(mainNavLink => {
+                if (mainNavLink.id === correspondingNavLinkId) {
+                    mainNavLink.classList.add('active');
+                } else {
+                    mainNavLink.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // Handle logo click to go to home/symptom checker
+    const navLogo = document.getElementById('nav-logo');
+    if (navLogo) {
+        navLogo.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Simulate click on the "Home" tab to trigger its logic
+            document.getElementById('nav-home').click();
+        });
+    }
+
 
     // --- MULTI-SELECT SYMPTOM LOGIC ---
     const renderSymptomsDropdown = () => {
@@ -456,6 +503,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         resultsContainer.classList.remove('hidden');
+        // Scroll to the results container after displaying them
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     
     // --- SPEECH RECOGNITION ---
@@ -511,7 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
         healthAnswerDiv.textContent = ''; 
 
         try {
-            // Corrected: Send a simple JSON object with 'prompt' key
             const payload = { prompt: prompt }; 
             const apiUrl = "/api/gemini-ask"; // Your Flask backend proxy endpoint
 
@@ -523,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             const responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI. Try again later.";
-healthAnswerDiv.textContent = responseText;
+            healthAnswerDiv.textContent = responseText;
 
         } catch (error) {
             healthAnswerDiv.textContent = 'An error occurred while fetching the answer.';
@@ -551,7 +599,6 @@ healthAnswerDiv.textContent = responseText;
 
         try {
             const prompt = `Explain the symptom '${symptomToClarify}' in simple terms, including common causes and what it might indicate. Keep it concise.`;
-            // Corrected: Send a simple JSON object with 'prompt' key
             const payload = { prompt: prompt }; 
             const apiUrl = "/api/gemini-ask"; // Your Flask backend proxy endpoint
 
@@ -563,7 +610,7 @@ healthAnswerDiv.textContent = responseText;
             const result = await response.json();
 
             const responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No explanation from AI. Try again later.";
-clarifyOutputDiv.textContent = responseText;
+            clarifyOutputDiv.textContent = responseText;
 
 
             
@@ -591,7 +638,6 @@ clarifyOutputDiv.textContent = responseText;
                 prompt = `Provide a concise and actionable health tip for daily well-being, considering someone might be dealing with "${lastPredictedDisease}". Focus on areas like nutrition, exercise, or mental health relevant to this context.`;
             }
 
-            // Corrected: Send a simple JSON object with 'prompt' key
             const payload = { prompt: prompt }; 
             const apiUrl = "/api/gemini-ask"; // Your Flask backend proxy endpoint
 
@@ -603,7 +649,7 @@ clarifyOutputDiv.textContent = responseText;
             const result = await response.json();
 
             const responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No tip received from AI. Try again later.";
-tipTextDiv.textContent = responseText;
+            tipTextDiv.textContent = responseText;
 
 
         } catch (error) {
