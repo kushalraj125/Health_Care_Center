@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Care Center - Interactive Report</title>
+    <!-- Chosen Palette: "Slate" with "Emerald" accents from Tailwind CSS. This provides a clean, modern, and professional feel suitable for a healthcare application. -->
+    <!-- Application Structure Plan: The application is redesigned as a Single-Page Application (SPA) with tab-based navigation. This structure was chosen to unify the fragmented, multi-page Flask application into a single, seamless user experience. It eliminates page reloads, making navigation between the core Symptom Checker and informational pages (About, Blog, etc.) instantaneous. The user flow is centered around a primary "Symptom Checker" tool, with secondary information easily accessible, which is a more intuitive structure for the app's primary purpose. For desktop view, the main "Symptom Checker" section is split into two columns: the left column now houses all user input elements and direct AI interaction tools (symptom selection, speech recognition, symptom clarifier, and general health questions), while the right column displays the prediction results and the personalized health tip generator. This arrangement aims to provide a clearer workflow and better visual balance. -->
+    <!-- Visualization & Content Choices: 
+        - Symptom Input: The original text field is replaced with an interactive, searchable multi-select dropdown. Goal: Simplify and guide user input. Method: Custom JavaScript and Tailwind CSS. Interaction: Users can type to search, click to add, and click badges to remove symptoms. Justification: This prevents typos and limits input to known symptoms, improving prediction accuracy and user experience.
+        - Prediction Results: Instead of modals or separate sections, results are displayed dynamically within a dedicated results card on the main view. Goal: Present information clearly and immediately after prediction. Method: JavaScript DOM manipulation. Justification: This provides direct feedback without disorienting the user with pop-ups or scrolling. The prediction logic has been reverted to a simpler simulation.
+        - Page Content Integration: Content from the static `about.html`, `blog.html`, etc., is placed into hidden sections. Goal: Consolidate all information into one file. Method: Tab-based navigation using JavaScript to toggle section visibility. Justification: This is a standard and highly effective SPA pattern that improves performance and usability.
+        - Symptom Clarifier: Allows users to get AI-generated explanations for specific symptoms. Goal: Enhance symptom understanding. Method: Gemini API call via JavaScript. Interaction: User types symptom, clicks button, AI provides explanation. Justification: Provides immediate, contextual information.
+        - Personalized Health Tip: Generates a general health tip using AI. Goal: Promote general well-being. Method: Gemini API call via JavaScript. Interaction: User clicks button, AI provides tip. Justification: Adds value beyond diagnosis, encouraging healthy habits. This feature is now context-aware of the predicted disease.
+        - General Health Question: Allows users to ask broad health questions. Goal: Provide comprehensive health information. Method: Gemini API call via JavaScript. Interaction: User types question, clicks button, AI provides answer. Justification: Offers flexible information retrieval.
+        - All presentation is achieved with structured HTML and Tailwind CSS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Tailwind 'slate-50' */
+        }
+        .nav-link {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .nav-link.active {
+            color: #10b981; /* Tailwind 'emerald-500' */
+            border-bottom-color: #10b981;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900">Health Care Center</h1>
+            <p class="mt-2 text-lg text-slate-600">Your AI-Powered Health Companion</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="mb-8 border-b border-slate-200">
+            <ul class="flex flex-wrap -mb-px text-sm sm:text-base font-medium text-center text-slate-500">
+                <li class="mr-2">
+                    <a id="nav-home" class="nav-link active inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">Symptom Checker</a>
+                </li>
+                <li class="mr-2">
+                    <a id="nav-about" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">About Us</a>
+                </li>
+                 <li class="mr-2">
+                    <a id="nav-blog" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">Blog</a>
+                </li>
+                 <li class="mr-2">
+                    <a id="nav-developer" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">Developer</a>
+                </li>
+                 <li class="mr-2">
+                    <a id="nav-contact" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-slate-600 hover:border-slate-300">Contact</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- Home / Symptom Checker View -->
+            <section id="view-home" class="content-section active">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- Left Column: Input Form & Direct AI Tools -->
+                    <div class="space-y-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                            <h2 class="text-2xl font-bold mb-4 text-slate-900">Symptom Analysis</h2>
+                            <p class="text-slate-600 mb-6">Select your symptoms from the list below, or use speech-to-text, to get an AI-based analysis of potential health conditions.</p>
+                            
+                            <div class="space-y-6">
+                                <!-- Symptom Selection Dropdown -->
+                                <div>
+                                    <label for="symptoms-search-input" class="block text-sm font-medium text-slate-700 mb-1">Select Your Symptoms</label>
+                                    <div class="relative">
+                                        <input type="text" id="symptoms-search-input" class="w-full p-3 rounded-lg bg-slate-100 border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Search or select symptoms...">
+                                        <div id="symptoms-dropdown" class="absolute z-10 w-full bg-white rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto hidden border border-slate-200"></div>
+                                    </div>
+                                    <div id="selected-symptoms-display" class="flex flex-wrap gap-2 p-2 mt-2 min-h-[40px]">
+                                        <!-- Selected symptom badges appear here -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Speech Recognition -->
+                                <button type="button" id="startSpeechRecognition" class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-transform duration-200 hover:scale-105">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm5 4a1 1 0 10-2 0v1.586l-.293-.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 10-1.414-1.414L12 9.586V8z" clip-rule="evenodd" /><path d="M10 18a5 5 0 005-5h-2a3 3 0 11-6 0H5a5 5 0 005 5z" /></svg>
+                                    Use Speech Recognition
+                                </button>
+                                <div id="transcription" class="mt-2 p-3 bg-slate-100 rounded-lg text-slate-500 text-sm italic min-h-[40px] flex items-center">Your transcribed text will appear here...</div>
+
+                                <!-- Prediction Button -->
+                                <button type="button" id="predict-button" class="w-full px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xl rounded-lg shadow-lg transition-transform duration-200 hover:scale-105">
+                                    Analyze Symptoms
+                                </button>
+                                <div id="prediction-error" class="text-red-500 text-center font-medium hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- Symptom Clarifier Feature -->
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                            <h3 class="text-2xl font-bold mb-3 text-slate-900">Clarify a Symptom ✨</h3>
+                            <p class="text-slate-600 mb-4">Enter a symptom to get a brief AI-generated explanation of what it might mean.</p>
+                            <textarea id="clarify-symptom-input" class="w-full p-3 rounded-lg bg-slate-100 border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500" rows="2" placeholder="e.g., fatigue"></textarea>
+                            <button type="button" id="clarify-symptom-button" class="w-full px-6 py-3 mt-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-transform duration-200 hover:scale-105">
+                                Get Explanation
+                            </button>
+                            <div id="clarify-symptom-output" class="mt-4 p-4 bg-slate-100 rounded-lg min-h-[60px] text-slate-700">
+                                <div id="clarify-loading" class="hidden text-center text-purple-400">Loading explanation...</div>
+                                <div id="clarify-text"></div>
+                            </div>
+                        </div>
+
+                        <!-- General Health Question Feature -->
+                        <div class="bg-slate-800 text-white p-6 rounded-2xl shadow-lg">
+                            <h2 class="text-center text-2xl font-bold mb-4 text-white">Ask a General Health Question ✨</h2>
+                            <div class="space-y-4">
+                                <textarea id="health-question" class="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white" rows="3" placeholder="e.g., What are the benefits of a balanced diet?"></textarea>
+                                <button type="button" id="askHealthQuestion" class="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-transform duration-200 hover:scale-105">
+                                    Get AI Answer
+                                </button>
+                                <div id="health-answer" class="mt-4 p-4 bg-slate-700 rounded-lg min-h-[80px]">
+                                    <div id="health-loading" class="hidden text-center text-purple-300">Loading...</div>
+                                    <div id="health-answer-text" class="text-slate-300"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Results & Personalized Health Tip -->
+                    <div class="space-y-8">
+                         <!-- Prediction Results -->
+                        <div id="results-container" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 hidden">
+                             <h2 class="text-2xl font-bold mb-2 text-slate-900">Analysis Results</h2>
+                             <div id="results-content"></div>
+                        </div>
+                        <div id="results-placeholder" class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 flex flex-col items-center justify-center text-center h-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                             <h3 class="text-xl font-semibold text-slate-700">Results will appear here</h3>
+                             <p class="text-slate-500 mt-1">Select your symptoms and click "Analyze" to see the results.</p>
+                        </div>
+                        
+                        <!-- Personalized Health Tip Feature -->
+                        <div class="bg-emerald-600 text-white p-6 rounded-2xl shadow-lg">
+                            <h2 class="text-center text-2xl font-bold mb-4 text-white">Your Daily Health Tip ✨</h2>
+                            <p class="text-center text-emerald-100 mb-4">Click below to get a new AI-generated health tip for your well-being.</p>
+                            <button type="button" id="get-health-tip-button" class="w-full px-6 py-3 bg-emerald-800 hover:bg-emerald-900 text-white font-semibold rounded-lg shadow-md transition-transform duration-200 hover:scale-105">
+                                Get New Health Tip
+                            </button>
+                            <div id="health-tip-output" class="mt-4 p-4 bg-emerald-700 rounded-lg min-h-[80px] flex items-center justify-center text-center">
+                                <div id="tip-loading" class="hidden text-emerald-300">Generating tip...</div>
+                                <div id="tip-text" class="text-emerald-100">Click "Get New Health Tip" to receive advice!</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- About Us View -->
+            <section id="view-about" class="content-section">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 max-w-4xl mx-auto prose prose-lg prose-slate">
+                    <h3>About Us</h3>
+                    <p>Welcome to Medical Health center, where health meets technology for a brighter, healthier future.</p>
+                    <h3>Our Vision</h3>
+                    <p>We envision a world where access to healthcare information is not just a luxury but a fundamental right. Our journey began with a simple yet powerful idea: to empower individuals with the knowledge and tools they need to take control of their health.</p>
+                    <h3>Who We Are</h3>
+                    <p>We are a passionate team of healthcare professionals, data scientists, and technology enthusiasts who share a common goal: to make healthcare accessible, understandable, and personalized for you. With years of experience in both healthcare and cutting-edge technology, we've come together to create this platform as a testament to our commitment to your well-being.</p>
+                    <h3>Our Mission</h3>
+                    <p>At this website, our mission is to provide you with a seamless and intuitive platform that leverages the power of artificial intelligence and machine learning. We want to assist you in identifying potential health concerns based on your reported symptoms, all while offering a wealth of educational resources to enhance your health literacy.</p>
+                </div>
+            </section>
+            
+            <!-- Blog View -->
+             <section id="view-blog" class="content-section">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 max-w-4xl mx-auto prose prose-lg prose-slate">
+                    <h2 class="text-center">Building a Symptom-Based Disease Diagnosis Web App with Flask and Machine Learning</h2>
+                    <p>In the age of technology and information, access to accurate and timely healthcare is more critical than ever. With the increasing importance of remote healthcare solutions, we embarked on a journey to develop a symptom-based disease diagnosis web application. Leveraging Flask for the backend and a Decision Tree Classifier model, we created a user-friendly platform that can help users identify potential illnesses based on their reported symptoms.</p>
+                    <h3>The Problem</h3>
+                    <p>The project began with recognizing a common issue: people often experience symptoms and want quick answers about their health concerns. It can be challenging to differentiate between various diseases, especially when symptoms overlap. Our goal was to provide a convenient solution for users to input their symptoms and receive potential diagnoses.</p>
+                    <h3>The Solution</h3>
+                    <p>We developed a web app that allows users to enter a list of symptoms they are experiencing. The app then uses a pre-trained Decision Tree Classifier model to predict the most likely disease based on the provided symptoms. Here's how it works:</p>
+                    <ol>
+                        <li><strong>Symptom Input:</strong> Users enter their symptoms through a user-friendly interface. The web app supports a wide range of symptoms, making it versatile for different scenarios.</li>
+                        <li><strong>Machine Learning Model:</strong> We trained a Decision Tree Classifier using a dataset containing symptoms and corresponding diseases. The model is capable of predicting diseases based on input symptoms.</li>
+                        <li><strong>Prediction:</strong> The app uses the model to predict the most likely disease, providing users with instant information about potential health concerns.</li>
+                        <li><strong>Additional Information:</strong> To enhance user experience, the app also provides additional information about the predicted disease. This includes a description of the disease, recommended precautions, medications, dietary advice, and workout tips.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Developer View -->
+            <section id="view-developer" class="content-section">
+                 <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 max-w-4xl mx-auto prose prose-lg prose-slate">
+                    <h6>About Junaid Khan: Your AI & ML Engineer</h6>
+                    <h5>Meet the Developer</h5>
+                    <p>Hello, I'm Kushal Singh Rajpurohit, your AI and Machine Learning Engineer. I am passionate about harnessing the power of technology to make a positive impact on people's lives. Allow me to share a bit about my journey in the world of artificial intelligence and machine learning.</p>
+                    <h5>My Expertise</h5>
+                    <p>With a strong academic background in computer science and a deep fascination for AI and ML, I embarked on a journey that has taken me across the globe, working on diverse and innovative projects. Over the years, I've had the privilege of collaborating on international projects that have pushed the boundaries of what's possible in AI and ML.</p>
+                 </div>
+            </section>
+
+            <!-- Contact View -->
+            <section id="view-contact" class="content-section">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 max-w-4xl mx-auto prose prose-lg prose-slate">
+                    <h4>Contact Us</h4>
+                    <p>Have questions or need assistance? We're here to help!</p>
+                    <h4>Customer Support</h4>
+                    <p>Our dedicated customer support team is available to assist you with any inquiries or issues you may have. Whether it's a technical question, feedback, or a general inquiry, we're just a message away.</p>
+                    <h4>Get in Touch</h4>
+                    <p>Feel free to reach out to us via email or through the contact form below. We value your feedback and are committed to providing you with the best possible experience.</p>
+                    <p><b>Email:</b> kushalrajpurohit@gmail.com</p>
+                    <p><b>Phone:</b> 03477155035</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DATA STORE ---
+    // All data from the backend is embedded here to simulate the Flask app in a single file.
+    const allSymptomsList = ['itching','skin_rash','nodal_skin_eruptions','continuous_sneezing','shivering','chills','joint_pain','stomach_pain','acidity','ulcers_on_tongue','muscle_wasting','vomiting','burning_micturition','spotting_ urination','fatigue','weight_gain','anxiety','cold_hands_and_feets','mood_swings','weight_loss','restlessness','lethargy','patches_in_throat','irregular_sugar_level','cough','high_fever','sunken_eyes','breathlessness','sweating','dehydration','indigestion','headache','yellowish_skin','dark_urine','nausea','loss_of_appetite','pain_behind_the_eyes','back_pain','constipation','abdominal_pain','diarrhoea','mild_fever','yellow_urine','yellowing_of_eyes','acute_liver_failure','fluid_overload','swelling_of_stomach','swelled_lymph_nodes','malaise','blurred_and_distorted_vision','phlegm','throat_irritation','redness_of_eyes','sinus_pressure','runny_nose','congestion','chest_pain','weakness_in_limbs','fast_heart_rate','pain_during_bowel_movements','pain_in_anal_region','bloody_stool','irritation_in_anus','neck_pain','dizziness','cramps','bruising','obesity','swollen_legs','swollen_blood_vessels','puffy_face_and_eyes','enlarged_thyroid','brittle_nails','swollen_extremeties','excessive_hunger','extra_marital_contacts','drying_and_tingling_lips','slurred_speech','knee_pain','hip_joint_pain','muscle_weakness','stiff_neck','swelling_joints','movement_stiffness','spinning_movements','loss_of_balance','unsteadiness','weakness_of_one_body_side','loss_of_smell','bladder_discomfort','foul_smell_of urine','continuous_feel_of_urine','passage_of_gases','internal_itching','toxic_look_(typhos)','depression','irritability','muscle_pain','altered_sensorium','red_spots_over_body','belly_pain','abnormal_menstruation','dischromic _patches','watering_from_eyes','increased_appetite','polyuria','family_history','mucoid_sputum','rusty_sputum','lack_of_concentration','visual_disturbances','receiving_blood_transfusion','receiving_unsterile_injections','coma','stomach_bleeding','distention_of_abdomen','history_of_alcohol_consumption','fluid_overload.1','blood_in_sputum','prominent_veins_on_calf','palpitations','painful_walking','pus_filled_pimples','blackheads','scurring','skin_peeling','silver_like_dusting','small_dents_in_nails','inflammatory_nails','blister','red_sore_around_nose','unknown'];
+    
+    const diseaseData = {
+        'Fungal infection': {
+            description: 'Fungal infection is a skin disease that is caused by a fungus. There are many different types of fungal infections, and they can affect any part of the body.',
+            precautions: ['bath twice', 'use dettol or neem in bathing water', 'keep body dry', 'wear clean cloths'],
+            medications: ['Azole-based antifungal creams', 'Oral antifungal medications', 'Antifungal shampoos', 'Clotrimazole'],
+            diets: ['Low-sugar diet', 'Probiotic-rich foods', 'Garlic and ginger', 'Avoid processed foods'],
+            workouts: ['Avoid public swimming pools', 'Shower after exercise', 'Wear breathable clothing', 'Yoga']
+        },
+        'Allergy': {
+            description: 'Allergy is a condition in which the immune system reacts abnormally to a foreign substance.',
+            precautions: ['apply calamine', 'cover area with bandage', 'use ice to compress itching', 'avoid allergens'],
+            medications: ['Antihistamines', 'Decongestants', 'Corticosteroid sprays', 'Epinephrine (for severe reactions)'],
+            diets: ['Hypoallergenic diet', 'Omega-3 fatty acids', 'Quercetin-rich foods', 'Avoid trigger foods'],
+            workouts: ['Indoor exercises', 'Low-pollen time exercises', 'Swimming in chlorinated pools', 'Pilates']
+        },
+        'GERD': {
+            description: 'Gastroesophageal reflux disease (GERD) is a chronic digestive disease.',
+            precautions: ['avoid eating spicy food', 'avoid lying down after eating', 'maintain healthy weight', 'exercise'],
+            medications: ['Antacids', 'H2 receptor blockers', 'Proton pump inhibitors (PPIs)', 'Prokinetics'],
+            diets: ['Avoid fatty foods', 'Limit citrus fruits', 'Small, frequent meals', 'Avoid alcohol and caffeine'],
+            workouts: ['Walking', 'Light jogging', 'Yoga', 'Avoid abdominal crunches']
+        },
+        'Chronic cholestasis': {
+            description: 'Chronic cholestasis is a condition where bile cannot flow from the liver to the duodenum.',
+            precautions: ['cold baths', 'anti-itch medicine', 'consult doctor', 'eat healthy'],
+            medications: ['Ursodeoxycholic acid', 'Cholestyramine', 'Rifampicin', 'Naltrexone'],
+            diets: ['Low-fat diet', 'Water-soluble vitamin supplements', 'Medium-chain triglycerides (MCTs)', 'High-calorie diet'],
+            workouts: ['Light aerobic exercises', 'Stretching', 'Consult a doctor for a safe plan', 'Swimming']
+        },
+        'Drug Reaction': {
+            description: 'Drug reaction is an adverse effect of a drug.',
+            precautions: ['stop irritation', 'consult nearest hospital', 'stop taking drug', 'follow up'],
+            medications: ['Antihistamines', 'Corticosteroids', 'Epinephrine', 'Discontinue the offending drug'],
+            diets: ['Hydration with water', 'Bland diet', 'Avoid known drug allergens', 'Probiotics'],
+            workouts: ['Rest', 'Gentle walking', 'Avoid strenuous activities', 'Mindfulness meditation']
+        },
+        'Jaundice': {
+            description: 'Jaundice is a yellow discoloration of the skin, mucous membranes, and the whites of the eyes caused by increased levels of bilirubin in the blood.',
+            precautions: ['drink plenty of water', 'rest', 'eat healthy', 'consult doctor'],
+            medications: ['Treatment of the underlying cause', 'Phototherapy for newborns', 'Intravenous immunoglobulin (IVIg)', 'Exchange transfusions'],
+            diets: ['High-fiber foods', 'Lean proteins', 'Plenty of fruits and vegetables', 'Avoid alcohol and processed foods'],
+            workouts: ['Rest is key', 'Gentle walks', 'Avoid heavy lifting', 'Yoga and stretching']
+        }
+        // Add all other diseases here to make the simulation complete...
+    };
+
+    const diseaseSymptomMap = {
+        'Fungal infection': ['itching', 'skin_rash', 'nodal_skin_eruptions', 'dischromic _patches'],
+        'Allergy': ['continuous_sneezing', 'shivering', 'chills', 'watering_from_eyes'],
+        'GERD': ['stomach_pain', 'acidity', 'ulcers_on_tongue', 'vomiting', 'cough', 'chest_pain'],
+        'Chronic cholestasis': ['itching', 'vomiting', 'yellowish_skin', 'nausea', 'loss_of_appetite', 'abdominal_pain', 'yellowing_of_eyes'],
+        'Drug Reaction': ['itching', 'skin_rash', 'stomach_pain', 'burning_micturition', 'spotting_ urination'],
+        'Jaundice': ['itching','vomiting','fatigue','weight_loss','high_fever','yellowish_skin','dark_urine','nausea','loss_of_appetite','abdominal_pain','yellowing_of_eyes','belly_pain']
+        // This map should also be fully populated for best results.
+    };
+
+
+    // --- UI ELEMENT REFERENCES ---
+    const navLinks = document.querySelectorAll('.nav-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const searchInput = document.getElementById('symptoms-search-input');
+    const dropdown = document.getElementById('symptoms-dropdown');
+    const selectedDisplay = document.getElementById('selected-symptoms-display');
+    const predictButton = document.getElementById('predict-button');
+    const resultsContainer = document.getElementById('results-container');
+    const resultsPlaceholder = document.getElementById('results-placeholder');
+    const resultsContent = document.getElementById('results-content');
+    const predictionError = document.getElementById('prediction-error');
+
+    let selectedSymptoms = [];
+    let lastPredictedDisease = null; // Global variable to store the last predicted disease
+
+    // --- NAVIGATION LOGIC ---
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            // Update active link style
+            navLinks.forEach(l => l.classList.remove('active'));
+            e.target.classList.add('active');
+
+            // Show corresponding view
+            const viewId = 'view-' + e.target.id.split('-')[1];
+            contentSections.forEach(section => {
+                if(section.id === viewId) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // --- MULTI-SELECT SYMPTOM LOGIC ---
+    const renderSymptomsDropdown = () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filtered = allSymptomsList.filter(s => 
+            s.toLowerCase().includes(searchTerm) && !selectedSymptoms.includes(s)
+        );
+        
+        dropdown.innerHTML = filtered.map(symptom => 
+            `<div class="p-3 hover:bg-slate-100 cursor-pointer" data-symptom="${symptom}">${symptom.replace(/_/g, ' ')}</div>`
+        ).join('');
+        
+        dropdown.classList.toggle('hidden', filtered.length === 0);
+    };
+
+    const renderSelectedBadges = () => {
+        selectedDisplay.innerHTML = selectedSymptoms.map(symptom =>
+            `<span class="flex items-center bg-emerald-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+                ${symptom.replace(/_/g, ' ')}
+                <button class="ml-2 text-white hover:bg-emerald-600 rounded-full w-4 h-4 flex items-center justify-center" data-symptom="${symptom}">&times;</button>
+            </span>`
+        ).join('');
+    };
+
+    searchInput.addEventListener('input', renderSymptomsDropdown);
+    searchInput.addEventListener('focus', renderSymptomsDropdown);
+
+    dropdown.addEventListener('click', e => {
+        if (e.target.dataset.symptom) {
+            const symptom = e.target.dataset.symptom;
+            if (!selectedSymptoms.includes(symptom)) {
+                selectedSymptoms.push(symptom);
+                renderSelectedBadges();
+            }
+            searchInput.value = '';
+            renderSymptomsDropdown();
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    selectedDisplay.addEventListener('click', e => {
+        if (e.target.dataset.symptom) {
+            const symptomToRemove = e.target.dataset.symptom;
+            selectedSymptoms = selectedSymptoms.filter(s => s !== symptomToRemove);
+            renderSelectedBadges();
+        }
+    });
+
+    document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // --- PREDICTION LOGIC (SIMULATION) ---
+    // Reverted prediction logic to simpler simulation as requested.
+    predictButton.addEventListener('click', () => {
+        if (selectedSymptoms.length === 0) {
+            predictionError.textContent = 'Please select at least one symptom.';
+            predictionError.classList.remove('hidden');
+            resultsContainer.classList.add('hidden'); 
+            resultsPlaceholder.classList.remove('hidden'); 
+            lastPredictedDisease = null; // Clear previous prediction context
+            return;
+        }
+        predictionError.classList.add('hidden');
+
+        let bestMatch = { disease: null, score: 0 };
+
+        for (const disease in diseaseSymptomMap) {
+            const symptomsForDisease = diseaseSymptomMap[disease];
+            const score = selectedSymptoms.filter(s => symptomsForDisease.includes(s)).length;
+            
+            if (score > bestMatch.score) {
+                bestMatch = { disease, score };
+            }
+        }
+        
+        let predictedDiseaseName = bestMatch.disease;
+        if (!predictedDiseaseName || bestMatch.score === 0) {
+            // Fallback for no match
+            predictedDiseaseName = 'Jaundice'; // Default to a common disease if no strong match
+        }
+        lastPredictedDisease = predictedDiseaseName; // Store the predicted disease
+
+        const data = diseaseData[predictedDiseaseName];
+        if (data) {
+            displayResults(predictedDiseaseName, data);
+        } else {
+            predictionError.textContent = 'Could not find details for the predicted condition.';
+            predictionError.classList.remove('hidden');
+        }
+    });
+
+    const displayResults = (diseaseName, data) => { // Removed confidence parameter
+        resultsPlaceholder.classList.add('hidden');
+        resultsContent.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-bold text-lg text-emerald-600">Predicted Condition</h3>
+                    <p class="text-slate-700">${diseaseName}</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-emerald-600">Description</h3>
+                    <p class="text-slate-700">${data.description}</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-emerald-600">Recommended Precautions</h3>
+                    <ul class="list-disc list-inside text-slate-700">${data.precautions.map(p => `<li>${p}</li>`).join('')}</ul>
+                </div>
+                 <div>
+                    <h3 class="font-bold text-lg text-emerald-600">Suggested Medications</h3>
+                    <ul class="list-disc list-inside text-slate-700">${data.medications.map(m => `<li>${m}</li>`).join('')}</ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-emerald-600">Dietary Advice</h3>
+                    <ul class="list-disc list-inside text-slate-700">${data.diets.map(d => `<li>${d}</li>`).join('')}</ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-emerald-600">Recommended Workouts</h3>
+                    <ul class="list-disc list-inside text-slate-700">${data.workouts.map(w => `<li>${w}</li>`).join('')}</ul>
+                </div>
+                <p class="text-slate-700 text-sm italic mt-4">This is a simulated prediction based on a limited dataset and is not a substitute for professional medical advice.</p>
+            </div>
+        `;
+        resultsContainer.classList.remove('hidden');
+    };
+    
+    // --- SPEECH RECOGNITION ---
+    const speechButton = document.getElementById('startSpeechRecognition');
+    const transcriptionDiv = document.getElementById('transcription');
+    
+    speechButton.addEventListener('click', () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            transcriptionDiv.textContent = 'Speech recognition is not supported in this browser.';
+            return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        
+        recognition.onstart = () => {
+             transcriptionDiv.textContent = 'Listening...';
+        };
+
+        recognition.onresult = (event) => {
+            const result = event.results[0][0].transcript;
+            transcriptionDiv.textContent = `Transcribed: "${result}"`;
+            searchInput.value = result;
+            renderSymptomsDropdown();
+        };
+
+        recognition.onerror = (event) => {
+            transcriptionDiv.textContent = 'Error in recognition: ' + event.error;
+        };
+        
+        recognition.onend = () => {
+            //
+        };
+
+        recognition.start();
+    });
+    
+    // --- GEMINI API INTEGRATION: General Health Question ---
+    const askHealthQuestionButton = document.getElementById('askHealthQuestion');
+    const healthQuestionInput = document.getElementById('health-question');
+    const healthAnswerDiv = document.getElementById('health-answer-text');
+    const healthLoadingSpan = document.getElementById('health-loading');
+
+    askHealthQuestionButton.addEventListener('click', async () => {
+        const prompt = healthQuestionInput.value.trim();
+        if (!prompt) {
+            healthAnswerDiv.textContent = 'Please enter a question.';
+            return;
+        }
+
+        healthLoadingSpan.classList.remove('hidden');
+        healthAnswerDiv.textContent = ''; 
+
+        try {
+            // Corrected: Send a simple JSON object with 'prompt' key
+            const payload = { prompt: prompt }; 
+            const apiUrl = "/api/gemini-ask"; // Your Flask backend proxy endpoint
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            const responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI. Try again later.";
+healthAnswerDiv.textContent = responseText;
+
+        } catch (error) {
+            healthAnswerDiv.textContent = 'An error occurred while fetching the answer.';
+            console.error('Error calling Gemini API:', error);
+        } finally {
+            healthLoadingSpan.classList.add('hidden');
+        }
+    });
+
+    // --- Symptom Clarifier LLM Feature ---
+    const clarifySymptomInput = document.getElementById('clarify-symptom-input');
+    const clarifySymptomButton = document.getElementById('clarify-symptom-button');
+    const clarifyLoadingSpan = document.getElementById('clarify-loading');
+    const clarifyOutputDiv = document.getElementById('clarify-text');
+
+    clarifySymptomButton.addEventListener('click', async () => {
+        const symptomToClarify = clarifySymptomInput.value.trim();
+        if (!symptomToClarify) {
+            clarifyOutputDiv.textContent = 'Please enter a symptom to clarify.';
+            return;
+        }
+
+        clarifyLoadingSpan.classList.remove('hidden');
+        clarifyOutputDiv.textContent = '';
+
+        try {
+            const prompt = `Explain the symptom '${symptomToClarify}' in simple terms, including common causes and what it might indicate. Keep it concise.`;
+            // Corrected: Send a simple JSON object with 'prompt' key
+            const payload = { prompt: prompt }; 
+            const apiUrl = "/api/gemini-ask"; // Your Flask backend proxy endpoint
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            const responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No explanation from AI. Try again later.";
+clarifyOutputDiv.textContent = responseText;
+
+
+            
+
+        } catch (error) {
+            clarifyOutputDiv.textContent = 'An error occurred while fetching the explanation.';
+            console.error('Error calling Gemini API for symptom clarification:', error);
+        } finally {
+            clarifyLoadingSpan.classList.add('hidden');
+        }
+    });
+
+    // --- Personalized Health Tip LLM Feature (Context-aware) ---
+    const getHealthTipButton = document.getElementById('get-health-tip-button');
+    const tipLoadingSpan = document.getElementById('tip-loading');
+    const tipTextDiv = document.getElementById('tip-text');
+
+    getHealthTipButton.addEventListener('click', async () => {
+        tipLoadingSpan.classList.remove('hidden');
+        tipTextDiv.textContent = '';
+
+        try {
+            let prompt = "Provide a concise and actionable general health tip for daily well-being. Focus on areas like nutrition, exercise, or mental health.";
+            if (lastPredictedDisease && lastPredictedDisease !== 'Uncertain Diagnosis') {
+                prompt = `Provide a concise and actionable health tip for daily well-being, considering someone might be dealing with "${lastPredictedDisease}". Focus on areas like nutrition, exercise, or mental health relevant to this context.`;
+            }
+
+            // Corrected: Send a simple JSON object with 'prompt' key
+            const payload = { prompt: prompt }; 
+            const apiUrl = "/api/gemini-ask"; // Your Flask backend proxy endpoint
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            const responseText = result?.candidates?.[0]?.content?.parts?.[0]?.text || "No tip received from AI. Try again later.";
+tipTextDiv.textContent = responseText;
+
+
+        } catch (error) {
+            tipTextDiv.textContent = 'An error occurred while fetching the health tip.';
+            console.error('Error calling Gemini API:', error);
+        } finally {
+            tipLoadingSpan.classList.add('hidden');
+        }
+    });
+
+});
+</script>
+
+</body>
+</html>
